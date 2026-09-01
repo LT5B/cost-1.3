@@ -6,7 +6,7 @@ Created by LT5B.
 
 ## Install
 Run this on your Terminal:
-``sudo curl -fsSL https://raw.githubusercontent.com/LT5B/cost-1.3/refs/heads/main/install.bash | bash``
+``sudo curl -fsSL https://raw.githubusercontent.com/LT5B/cost-1.3/refs/heads/main/install.sh | bash``
 
 ## Features
 * Simple package management
