@@ -1,12 +1,6 @@
 #!/bin/bash
 
-# Require root privileges to run
-if [ "$EUID" -ne 0 ]; then
-    echo "Please run this script with root privileges"
-    exit 1
-fi
-
-echo "Installing Git..."
+echo "Installing a related department..."
 curl -L -R -O https://www.kernel.org/pub/software/scm/git/git-2.55.0.tar.gz
 tar zxf git-2.55.0.tar.gz
 cd git-2.55.0 || exit
