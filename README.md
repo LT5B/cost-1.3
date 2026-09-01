@@ -4,6 +4,10 @@ Cost is a Bash-based package management script designed to provide a simple and 
 
 Created by LT5B.
 
+## Install
+Run this on your Terminal:
+``sudo curl -fsSL https://raw.githubusercontent.com/LT5B/cost-1.3/refs/heads/main/1.3.sh``
+
 ## Features
 * Simple package management
 * Lightweight Bash implementation
