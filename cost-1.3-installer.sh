@@ -40,6 +40,7 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
+# Note the path contains a dot prefix (.$1)
 if [ ! -d "/private/cost/packages/.$1" ]; then
     echo "Cost: Package not found: $1"
     exit 1
@@ -143,9 +144,10 @@ EOF
 cat << 'EOF' > "/opt/cost/flag/search"
 #!/bin/bash
 echo "Available packages in Cost:"
-find "/private/cost/packages" -type f | perl -MList::Util=shuffle -e 'print shuffle <STDIN>' | head -n 10 | while read -r file; do
+# Search for directories (dot prefix removed for display)
+find "/private/cost/packages" -mindepth 1 -maxdepth 1 | perl -MList::Util=shuffle -e 'print shuffle <STDIN>' | head -n 10 | while read -r file; do
     base_name=$(basename "$file")
-    clean_base=$(echo "$base_name" | tr -d '.')
+    clean_base="${base_name#.}" # Remove the leading dot
     echo "- $clean_base"
 done
 EOF
@@ -159,33 +161,26 @@ EOF
 # --- Documentation (Docs) ---
 cat << 'EOF' > "/opt/cost/doc/license.md"
 # COST LICENSE
-
 Copyright (c) 2026 LT5B
 
 ## 1. Permission
-
 Permission is hereby granted, free of charge, to any person obtaining a copy of the `cost` Bash package and associated files (the "Software"), to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, subject to the conditions stated in this License.
 
 ## 2. Conditions
-
 The following conditions apply:
-
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 * Modified versions of the Software must clearly indicate that changes have been made.
 * The name "LT5B" shall not be used to endorse or promote products derived from the Software without prior written permission.
 
 ## 3. Disclaimer
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
 
 IN NO EVENT SHALL LT5B BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## 4. Attribution
-
 When the Software is redistributed or included in another project, reasonable attribution to **LT5B** and the `cost` Bash package is appreciated.
 
 ## 5. License Version
-
 This license is the **COST License, Version 1.0**, created for the `cost` Bash package by **LT5B**.
 
 Copyright (c) 2026 LT5B. All rights reserved.
@@ -211,28 +206,23 @@ Created by LT5B.
 * Built for Unix-like environments
 
 ## Philosophy
-
 Cost is designed around three principles:
-
 1. **Simplicity:** Package management should not require complicated commands.
 2. **Lightweight Design:** Cost is implemented as a Bash script, keeping the project small and easy to inspect.
 3. **Ease of Use:** Commands should be understandable and predictable for users.
 
 ## Requirements
-
 Cost requires:
 * Bash
 * A Unix-like operating system
 * Standard command-line utilities
 
 ## Version
-
 Current Project: Cost
 Language: Bash
 Creator: LT5B
 
 ## Author
-
 LT5B
 
 Cost is an independent Bash project created to make package management more accessible through a simple command-line experience.
@@ -254,28 +244,33 @@ require 'fileutils'
 print "Enter the source directory path: "
 source_dir = gets.chomp.strip
 
+print "Enter the name of package: " 
+package_name = gets.chomp.strip
+
 unless Dir.exist?(source_dir)
   puts "Error: Source directory does not exist!"
   exit 1
 end
 
+if package_name.empty?
+  puts "Error: Package name cannot be empty!"
+  exit 1
+end
+
 target_base = "/private/cost/packages"
 FileUtils.mkdir_p(target_base) unless Dir.exist?(target_base)
-users_base = "/opt/cost"
 
-Dir.glob("#{users_base}/*").each do |user_dir|
-  next unless File.directory?(user_dir)
-  user_name = File.basename(user_dir)
-  hidden_link_name = ".#{user_name}"
-  full_link_path = File.join(target_base, hidden_link_name)
+# Create target path with dot prefix
+target_path = File.join(target_base, ".#{package_name}")
 
-  File.delete(full_link_path) if File.symlink?(full_link_path)
-  begin
-    File.symlink(user_dir, full_link_path)
-    puts "Created hidden link: #{full_link_path} -> #{user_dir}"
-  rescue => e
-    puts "Failed to create link for #{user_name}: #{e.message}"
-  end
+# Remove old package if it exists
+FileUtils.rm_rf(target_path) if File.exist?(target_path)
+
+begin
+  FileUtils.cp_r(source_dir, target_path)
+  puts "Created hidden package directory: #{target_path} (from #{source_dir})"
+rescue => e
+  puts "Failed to create package #{package_name}: #{e.message}"
 end
 puts "Configuration completed successfully!"
 EOF
@@ -315,15 +310,15 @@ EOF
 # Run Ruby Copyer
 ruby "/opt/cost/ruby/copyer.rb"
 
-# Update PATH for the user executing sudo (so it applies to their personal profile)
+# Update PATH for the user executing sudo
 USER_HOME=$(eval echo "~${SUDO_USER:-$USER}")
 echo 'export PATH="$PATH:/opt/cost/bin"' >> "$USER_HOME/.bashrc"
 echo 'export PATH="$PATH:/opt/cost/bin"' >> "$USER_HOME/.zshrc"
 
 cp "/opt/cost/bin/cost" "/opt/cost/library/cost/cost-1.3"
 
-# Update to Terminal
-source $USER_HOME/.bashrc
-source $USER_HOME/.zshrc
+# Source the profiles (will only affect current shell execution environment)
+[ -f "$USER_HOME/.bashrc" ] && source "$USER_HOME/.bashrc"
+[ -f "$USER_HOME/.zshrc" ] && source "$USER_HOME/.zshrc"
 
 echo "Cost installation completed!"
