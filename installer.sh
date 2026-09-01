@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Installing a related department..."
-curl -L -R -O https://www.kernel.org/pub/software/scm/git/git-2.55.0.tar.gz
+curl -S -L -R -O https://www.kernel.org/pub/software/scm/git/git-2.55.0.tar.gz
 tar zxf git-2.55.0.tar.gz
 cd git-2.55.0 || exit
 make configure
