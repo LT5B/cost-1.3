@@ -4,9 +4,7 @@ echo "Installing a related department..."
 curl -s -L -R -O https://www.kernel.org/pub/software/scm/git/git-2.55.0.tar.gz
 tar zxf git-2.55.0.tar.gz
 cd git-2.55.0 || exit
-make configure
 ./configure
-make all
 
 echo "Creating Cost directory structure..."
 mkdir -p /opt/cost/{bin,flag,ruby,doc,update,include,frameworks,lib,libexec,share,etc,manpages}
